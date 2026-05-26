@@ -1,6 +1,6 @@
 ARG nominatim_version=3.5.2
 
-FROM peterevans/xenial-gcloud:1.2.23 as builder
+FROM ubuntu:xenial as builder
 
 ARG nominatim_version
 
@@ -41,7 +41,7 @@ RUN cd /srv \
  && make
 
 
-FROM peterevans/xenial-gcloud:1.2.23
+FROM ubuntu:xenial
 
 ARG nominatim_version
 
@@ -81,6 +81,7 @@ RUN apt-get -y update \
     curl \
     ca-certificates \
     sudo \
+    awscli \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* \
  && rm -rf /tmp/* /var/tmp/*

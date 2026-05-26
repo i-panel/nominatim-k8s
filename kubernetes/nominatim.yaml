@@ -10,40 +10,48 @@ spec:
   selector:
     app: nominatim
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nominatim
 spec:
   replicas: 3
+  selector:
+    matchLabels:
+      app: nominatim
+      track: stable
   template:
     metadata:
       labels:
         app: nominatim
         track: stable
     spec:
-      volumes:
-      - name: nominatim-secret-volume
-        secret:
-          secretName: nominatim-storage-secret
+      # Uncomment the following lines if using a private registry that requires authentication
+      # imagePullSecrets:
+      # - name: private-registry-auth
       containers:
       - name: nominatim-k8s
-        image: peterevans/nominatim-k8s:latest
+        # Default to GitHub Container Registry. Change YOUR_GITHUB_USERNAME or use your private registry URL.
+        image: ghcr.io/YOUR_GITHUB_USERNAME/nominatim-k8s:latest
         env:
         - name: NOMINATIM_MODE
           value: RESTORE
         - name: NOMINATIM_DATA_LABEL
           value: maldives-20161213
-        - name: NOMINATIM_SA_KEY_PATH
-          value: "/etc/nominatim-secret-volume/service-account-key.json"
-        - name: NOMINATIM_PROJECT_ID
-          value: my-project
-        - name: NOMINATIM_GS_BUCKET
-          value: "gs://my-bucket"
-        volumeMounts:
-        - name: nominatim-secret-volume
-          readOnly: true
-          mountPath: /etc/nominatim-secret-volume
+        - name: NOMINATIM_AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: nominatim-storage-secret
+              key: access-key-id
+        - name: NOMINATIM_AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: nominatim-storage-secret
+              key: secret-access-key
+        - name: NOMINATIM_AWS_REGION
+          value: "ir-thr-at1"
+        - name: NOMINATIM_S3_BUCKET
+          value: "my-bucket"
         ports:
         - containerPort: 8080
         readinessProbe:

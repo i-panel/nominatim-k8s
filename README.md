@@ -54,21 +54,41 @@ To update the live deployment with new PBF data:
 3. Delete the canary deployment.
 4. Perform a rolling update on the stable track deployment to create pods using the new database.
 
-#### Creating the secret
+#### Configuration (ConfigMap and Secrets)
 
-```bash
-# Set your S3 credentials (for AWS, ArvanCloud, or other S3-compatible endpoints)
-ACCESS_KEY_ID=my-access-key
-SECRET_ACCESS_KEY=my-secret-key
+Instead of hardcoding values directly in the deployment YAML, you configure your environment through a ConfigMap and a Secret.
 
-# Create a secret containing the S3 credentials
-kubectl create secret generic nominatim-storage-secret \
-  --from-literal=access-key-id=$ACCESS_KEY_ID \
-  --from-literal=secret-access-key=$SECRET_ACCESS_KEY
-```  
+1. **Create the ConfigMap**: Edit the `kubernetes/nominatim-config.yaml` file to define your region, S3 bucket, output properties, and PBF data map URL:
+   ```yaml
+   apiVersion: v1
+   kind: ConfigMap
+   metadata:
+     name: nominatim-config
+   data:
+     PBF_URL: "http://download.geofabrik.de/asia/iran-latest.osm.pbf"
+     DATA_LABEL: "iran-260525"
+     AWS_REGION: "ir-thr-at1"
+     S3_BUCKET: "nominatim-data"
+   ```
+   Apply the config map to your cluster:
+   ```bash
+   kubectl apply -f kubernetes/nominatim-config.yaml
+   ```
 
-#### Deployment configuration
-Before deploying, edit the `env` section of both the canary deployment and stable track deployment.
+2. **Create the Secret**: Inject your S3 credentials into Kubernetes (e.g., AWS IAM or ArvanCloud access keys):
+   ```bash
+   # Set your S3 credentials
+   ACCESS_KEY_ID=my-access-key
+   SECRET_ACCESS_KEY=my-secret-key
+
+   # Create a secret containing the S3 credentials
+   kubectl create secret generic nominatim-storage-secret \
+     --from-literal=access-key-id=$ACCESS_KEY_ID \
+     --from-literal=secret-access-key=$SECRET_ACCESS_KEY
+   ```
+
+#### Deployment Environment Variables Explanation
+The deployment files will pull these values automatically from the `nominatim-config` ConfigMap and `nominatim-storage-secret` Secret. Be aware of the following logic behind the variables:
 
 - `NOMINATIM_MODE` - `CREATE` from PBF data, or `RESTORE` from S3.
 - `NOMINATIM_PBF_URL` - URL to PBF data file. (Optional when `NOMINATIM_MODE=RESTORE`)

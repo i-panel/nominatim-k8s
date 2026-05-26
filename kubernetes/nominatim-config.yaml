@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nominatim-config
+data:
+  PBF_URL: "http://download.geofabrik.de/asia/iran-latest.osm.pbf"
+  DATA_LABEL: "iran-260525"
+  AWS_REGION: "ir-thr-at1"
+  S3_BUCKET: "nominatim-data"

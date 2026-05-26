@@ -1,6 +1,6 @@
 ARG nominatim_version=3.5.2
 
-FROM ubuntu:xenial as builder
+FROM ubuntu:xenial AS builder
 
 ARG nominatim_version
 
@@ -26,11 +26,12 @@ RUN apt-get -y update \
     libproj-dev \
     postgresql-server-dev-9.5 \
     php \
-    curl
+    curl \
+    ca-certificates
 
 # Build Nominatim
 RUN cd /srv \
- && curl --silent -L http://www.nominatim.org/release/Nominatim-${nominatim_version}.tar.bz2 -o v${nominatim_version}.tar.bz2 \
+ && curl --silent -L https://nominatim.org/release/Nominatim-${nominatim_version}.tar.bz2 -o v${nominatim_version}.tar.bz2 \
  && tar xf v${nominatim_version}.tar.bz2 \
  && rm v${nominatim_version}.tar.bz2 \
  && mv Nominatim-${nominatim_version} nominatim \
@@ -59,7 +60,7 @@ LABEL \
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Set locale and install packages
-ENV LANG C.UTF-8
+ENV LANG=C.UTF-8
 RUN apt-get -y update \
  && apt-get install -y -qq --no-install-recommends locales \
  && locale-gen en_US.UTF-8 \
